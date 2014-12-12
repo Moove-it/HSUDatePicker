@@ -1,0 +1,11 @@
+source 'https://github.com/CocoaPods/Specs.git'
+
+target 'HSUDatePicker', :exclusive => true do
+  pod "HSUDatePicker", :path => "../"
+end
+
+target 'Tests', :exclusive => true do
+  pod "HSUDatePicker", :path => "../"
+
+  
+end
