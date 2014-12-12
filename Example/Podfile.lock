@@ -1,0 +1,14 @@
+PODS:
+  - HSUDatePicker (0.1.0)
+
+DEPENDENCIES:
+  - HSUDatePicker (from `../`)
+
+EXTERNAL SOURCES:
+  HSUDatePicker:
+    :path: ../
+
+SPEC CHECKSUMS:
+  HSUDatePicker: 75d1116d76a430f2a53964ad42e9acaf23bb06be
+
+COCOAPODS: 0.35.0

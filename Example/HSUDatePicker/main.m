@@ -1,9 +1,9 @@
 //
 //  main.m
-//  HSUDatePicker
+//  Demo
 //
-//  Created by Adrian Gomez on 12/12/2014.
-//  Copyright (c) 2014 Adrian Gomez. All rights reserved.
+//  Created by Jason Hsu on 13-9-17.
+//  Copyright (c) 2013年 Jason Hsu. All rights reserved.
 //
 
 #import <UIKit/UIKit.h>

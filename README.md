@@ -1,9 +1,8 @@
 # HSUDatePicker
 
-[![CI Status](http://img.shields.io/travis/Adrian Gomez/HSUDatePicker.svg?style=flat)](https://travis-ci.org/Adrian Gomez/HSUDatePicker)
-[![Version](https://img.shields.io/cocoapods/v/HSUDatePicker.svg?style=flat)](http://cocoadocs.org/docsets/HSUDatePicker)
-[![License](https://img.shields.io/cocoapods/l/HSUDatePicker.svg?style=flat)](http://cocoadocs.org/docsets/HSUDatePicker)
-[![Platform](https://img.shields.io/cocoapods/p/HSUDatePicker.svg?style=flat)](http://cocoadocs.org/docsets/HSUDatePicker)
+A date picker just like a Calendar App
+
+![image](https://github.com/Moove-it/HSUDatePicker/raw/master/1.png)
 
 ## Usage
 
@@ -20,9 +19,10 @@ it, simply add the following line to your Podfile:
 
 ## Author
 
+Jason Hsu, support@tuoxie.me
+Haechan Lee, soport55@thefermata.net
 Adrian Gomez, adrian.gomez@moove-it.com
 
 ## License
 
 HSUDatePicker is available under the MIT license. See the LICENSE file for more info.
-
