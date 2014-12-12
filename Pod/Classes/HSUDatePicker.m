@@ -15,6 +15,8 @@
 
 @property (nonatomic, weak) HSUDatePicker *delegate;
 
+@property (nonatomic, strong) UIColor *weekdayColor;
+@property (nonatomic, strong) UIColor *weekendColor;
 @property (nonatomic, strong) UIColor *todayColor;
 @property (nonatomic, strong) UIColor *touchColor;
 @property (nonatomic, strong) UIColor *selectedColor;
@@ -34,6 +36,8 @@
 @interface HSUDateCollectionViewCell : UICollectionViewCell
 
 @property (nonatomic, readwrite) NSDate *date;
+@property (nonatomic, strong) UIColor *weekdayColor;
+@property (nonatomic, strong) UIColor *weekendColor;
 @property (nonatomic, strong) UIColor *tintColor;
 @property (nonatomic, strong) UIColor *disabledColor;
 
@@ -80,7 +84,9 @@
         NSAssert(startYear > 1582, @"startYear should later than 1582");
         self.startYear = startYear;
         self.endYear = endYear;
-        
+
+        self.weekdayColor = [UIColor blackColor];
+        self.weekendColor = [UIColor grayColor];
         self.todayColor = [UIColor redColor];
         self.touchColor = [UIColor lightGrayColor];
         self.selectedColor = [UIColor blackColor];
@@ -104,8 +110,10 @@
 
 - (void)viewDidLoad
 {
-    self.datePickerVC = [[HSUDatePickerViewController alloc]
-                                                 initWithCollectionViewLayout:[[UICollectionViewFlowLayout alloc] init]];
+    self.datePickerVC = [[HSUDatePickerViewController alloc] initWithCollectionViewLayout:[[UICollectionViewFlowLayout alloc] init]];
+
+    self.datePickerVC.weekdayColor = self.weekdayColor;
+    self.datePickerVC.weekendColor = self.weekendColor;
     self.datePickerVC.todayColor = self.todayColor;
     self.datePickerVC.touchColor = self.touchColor;
     self.datePickerVC.selectedColor = self.selectedColor;
@@ -180,7 +188,8 @@
     [self.delegate datePickerDidCancelSelect:self];
 }
 
-- (BOOL)dateInPast:(NSDate *)date {
+- (BOOL)dateInPast:(NSDate *)date
+{
     NSCalendar *calendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSGregorianCalendar];
     [calendar setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
 
@@ -327,20 +336,33 @@
     }
 }
 
-- (UIColor *)normalTextColor {
+- (UIColor *)normalTextColor
+{
     if (self.disabledColor) {
         return self.disabledColor;
     } else {
-        return [UIColor blackColor];
+        return self.weekdayColor;
     }
 }
 
-- (UIColor *)holydaysTextColor {
+- (UIColor *)holydaysTextColor
+{
     if (self.disabledColor) {
         return self.disabledColor;
     } else {
-        return [UIColor grayColor];
+        return self.weekendColor;
     }
+}
+
+- (void)setWeekdayColor:(UIColor *)weekdayColor
+{
+    _weekdayColor = weekdayColor;
+    [self setNeedsDisplay];
+}
+
+- (void)setWeekendColor:(UIColor *)weekendColor {
+    _weekendColor = weekendColor;
+    [self setNeedsDisplay];
 }
 
 @end
@@ -436,7 +458,7 @@
         [self.weekdayLabels addObject:weekdayLabel];
         weekdayLabel.textAlignment = NSTextAlignmentCenter;
         weekdayLabel.font = [UIFont systemFontOfSize:10];
-        weekdayLabel.textColor = i == 0 || i == 6 ? [UIColor grayColor] : [UIColor blackColor];
+        weekdayLabel.textColor = i == 0 || i == 6 ? self.weekendColor : self.weekdayColor;
         weekdayLabel.text = text;
         [weekdayLabel sizeToFit];
         [self.view addSubview:weekdayLabel];
@@ -560,6 +582,8 @@
     if (day > 0 && day <= [self dayOfYear:year andMonth:month]) {
         [components setDay:day];
         cell.date = [calendar dateFromComponents:components];
+        cell.weekdayColor = self.weekdayColor;
+        cell.weekendColor = self.weekendColor;
 
         if (!self.allowPastDateSelection && [self dateInPast:components]) {
           cell.disabledColor = self.disabledColor;
@@ -663,7 +687,8 @@
     }
 }
 
-- (BOOL)dateInPast:(NSDateComponents *)components {
+- (BOOL)dateInPast:(NSDateComponents *)components
+{
   NSCalendar *cal = [NSCalendar currentCalendar];
   NSDate *today = [cal dateFromComponents:self.today];
   NSDate *otherDate = [cal dateFromComponents:components];
@@ -683,30 +708,53 @@
 
 @implementation HSUNagivationBar
 
-- (instancetype)initWithFrame:(CGRect)frame {
+- (instancetype)initWithFrame:(CGRect)frame
+{
     self = [super initWithFrame:frame];
 
-    self.backgroundColor  = [UIColor whiteColor];
-
-    UIButton *cancelButton = [[UIButton alloc] initWithFrame:CGRectMake(10, 0, 60, CGRectGetHeight(self.frame))];
-    [cancelButton addTarget:self action:@selector(cancel) forControlEvents:UIControlEventTouchDown];
-    [cancelButton setTitle:@"Cancel" forState:UIControlStateNormal];
-    [cancelButton setTitleColor:[UIColor blueColor] forState:UIControlStateNormal];
+    self.backgroundColor = [UIColor whiteColor];
 
     self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, CGRectGetWidth(self.frame), CGRectGetHeight(self.frame))];
     self.titleLabel.textAlignment = NSTextAlignmentCenter;
     [self addSubview:self.titleLabel];
-    [self addSubview:cancelButton];
+
 
     return self;
 }
 
-- (void)setTitle:(NSString *)title {
+- (void)willMoveToSuperview:(UIView *)newSuperview
+{
+    UIButton *cancelButton = [self buildBackButton];
+    [self addSubview:cancelButton];
+}
+
+- (UIButton *)buildBackButton
+{
+    UIButton *cancelButton;
+
+    if (self.delegate && [self.delegate customCancelButtonImage]) {
+        NSInteger buttonHeight = 46;
+        cancelButton = [[UIButton alloc] initWithFrame:CGRectMake(-5, 0, 44, 44)];
+        [cancelButton setImage:[self.delegate customCancelButtonImage] forState:UIControlStateNormal];
+    } else {
+        cancelButton = [[UIButton alloc] initWithFrame:CGRectMake(10, 0, 60, CGRectGetHeight(self.frame))];
+        [cancelButton setTitle:@"Cancel" forState:UIControlStateNormal];
+        [cancelButton setTitleColor:[UIColor blueColor] forState:UIControlStateNormal];
+    }
+
+    [cancelButton addTarget:self action:@selector(cancel) forControlEvents:UIControlEventTouchDown];
+
+    return cancelButton;
+}
+
+- (void)setTitle:(NSString *)title
+{
     self.titleLabel.text = title;
     [self setNeedsDisplay];
 }
 
-- (void)cancel {
+- (void)cancel
+{
     [self.delegate cancel];
 }
 

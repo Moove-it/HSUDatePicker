@@ -13,9 +13,12 @@
 
 @property (nonatomic, strong) UIColor *todayColor;
 @property (nonatomic, strong) UIColor *touchColor;
+@property (nonatomic, strong) UIColor *weekdayColor;
+@property (nonatomic, strong) UIColor *weekendColor;
 @property (nonatomic, strong) UIColor *selectedColor;
 @property (nonatomic, strong) UIColor *disabledColor;
 @property (nonatomic, assign) BOOL allowPastDateSelection;
+@property (nonatomic, strong) UIImage *customCancelButtonImage;
 
 @property (nonatomic, assign) NSInteger startYear;
 @property (nonatomic, assign) NSInteger endYear;
