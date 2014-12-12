@@ -7,7 +7,7 @@ Pod::Spec.new do |s|
                        disable past date selection.
                        DESC
   s.homepage         = "https://github.com/Moove-it/HSUDatePicker"
-  s.screenshots     = "https://raw.githubusercontent.com/Moove-it/HSUDatePicker/master/1.png"
+  s.screenshots     = "https://raw.githubusercontent.com/Moove-it/HSUDatePicker/master/screenshot.png"
   s.license          = 'MIT'
   s.author           = { "Adrian Gomez" => "adrian.gomez@moove-it.com", "Jason Hsu" => "support@tuoxie.me", "Haechan Lee" => "soport55@thefermata.net" }
   s.source           = { :git => "https://github.com/Moove-it/HSUDatePicker.git", :tag => s.version.to_s }

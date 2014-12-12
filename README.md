@@ -2,7 +2,7 @@
 
 A date picker just like a Calendar App
 
-![image](https://github.com/Moove-it/HSUDatePicker/raw/master/1.png)
+![image](https://github.com/Moove-it/HSUDatePicker/raw/master/screenshot.png)
 
 ## Usage
 
