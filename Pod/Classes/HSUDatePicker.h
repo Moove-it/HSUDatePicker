@@ -9,7 +9,7 @@
 #import <UIKit/UIKit.h>
 
 @protocol HSUDatePickerDelegate;
-@interface HSUDatePicker : UINavigationController
+@interface HSUDatePicker : UIViewController
 
 @property (nonatomic, strong) UIColor *todayColor;
 @property (nonatomic, strong) UIColor *touchColor;
@@ -23,7 +23,7 @@
 @property (nonatomic, assign, getter = isSupportMultiSelection) BOOL supportMultiSelection;
 @property (nonatomic, strong) NSDate *selectedDate;
 @property (nonatomic, strong) NSDateComponents *selectedDateComponents;
-@property (nonatomic, weak) id<HSUDatePickerDelegate, UINavigationControllerDelegate> delegate;
+@property (nonatomic, weak) id<HSUDatePickerDelegate> delegate;
 
 - (id)initWithStartYear:(NSInteger)startYear endYear:(NSInteger)endYear;
 - (id)initFromCurrentYearWithYears:(NSInteger)years;

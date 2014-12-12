@@ -13,6 +13,8 @@
 
 @interface HSUDatePickerViewController : UICollectionViewController
 
+@property (nonatomic, weak) HSUDatePicker *delegate;
+
 @property (nonatomic, strong) UIColor *todayColor;
 @property (nonatomic, strong) UIColor *touchColor;
 @property (nonatomic, strong) UIColor *selectedColor;
@@ -24,6 +26,8 @@
 
 @property (nonatomic, strong) NSDateComponents *selectedDateComponents;
 @property (nonatomic, strong) NSDateComponents *startSelectDateComponents;
+
+@property (nonatomic, weak) UILabel *titleLabel;
 
 @end
 
@@ -46,9 +50,24 @@
 
 @end
 
+@interface HSUNagivationBar : UIView
+
+@property (nonatomic, weak) HSUDatePicker *delegate;
+@property (nonatomic, strong) UILabel *titleLabel;
+
+- (void)setTitle:(NSString *)title;
+
+@end
+
 @interface HSUDatePicker ()
 
 @property (nonatomic, strong) NSDate *startSelectedDate;
+@property (nonatomic, strong) HSUDatePickerViewController *datePickerVC;
+
+@property (nonatomic, strong) HSUNagivationBar *navigationBar;
+
+
+- (void)yearDidChange:(NSInteger)year;
 
 @end
 
@@ -65,6 +84,7 @@
         self.todayColor = [UIColor redColor];
         self.touchColor = [UIColor lightGrayColor];
         self.selectedColor = [UIColor blackColor];
+        self.disabledColor = [UIColor lightGrayColor];
         self.allowPastDateSelection = YES;
 
         [[NSNotificationCenter defaultCenter]
@@ -84,28 +104,41 @@
 
 - (void)viewDidLoad
 {
-    HSUDatePickerViewController *datePickerVC = [[HSUDatePickerViewController alloc]
+    self.datePickerVC = [[HSUDatePickerViewController alloc]
                                                  initWithCollectionViewLayout:[[UICollectionViewFlowLayout alloc] init]];
-    datePickerVC.todayColor = self.todayColor;
-    datePickerVC.touchColor = self.touchColor;
-    datePickerVC.selectedColor = self.selectedColor;
-    datePickerVC.disabledColor = self.disabledColor;
-    datePickerVC.allowPastDateSelection = self.allowPastDateSelection;
-    
-    datePickerVC.startYear = self.startYear;
-    datePickerVC.endYear = self.endYear;
-    self.viewControllers = @[datePickerVC];
+    self.datePickerVC.todayColor = self.todayColor;
+    self.datePickerVC.touchColor = self.touchColor;
+    self.datePickerVC.selectedColor = self.selectedColor;
+    self.datePickerVC.disabledColor = self.disabledColor;
+    self.datePickerVC.allowPastDateSelection = self.allowPastDateSelection;
+    self.datePickerVC.delegate = self.self;
+
+    self.datePickerVC.startYear = self.startYear;
+    self.datePickerVC.endYear = self.endYear;
+
+    [self.datePickerVC willMoveToParentViewController:self];
+    [self addChildViewController:self.datePickerVC];
+    [self.datePickerVC didMoveToParentViewController:self];
+
+    CGRect controllerRect = self.view.frame;
+    CGRect navigationBarRect = CGRectMake(0, 20, CGRectGetWidth(controllerRect), 64);
+
+    self.navigationBar = [[HSUNagivationBar alloc] initWithFrame:navigationBarRect];
+    self.navigationBar.backgroundColor = [UIColor whiteColor];
+    self.navigationBar.delegate = self;
 
     [super viewDidLoad];
 }
 
+- (void)yearDidChange:(NSInteger)year {
+    [self.navigationBar setTitle:[NSString stringWithFormat:@"%ld", (long)year]];
+}
+
 - (void)viewDidAppear:(BOOL)animated
 {
-    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc]
-                                             initWithBarButtonSystemItem:UIBarButtonSystemItemCancel
-                                             target:self
-                                             action:@selector(cancel)];
-    
+    [self.view addSubview:self.datePickerVC.view];
+    [self.view addSubview:self.navigationBar];
+
     [super viewDidAppear:animated];
 }
 
@@ -123,25 +156,22 @@
         NSDate *date = notification.userInfo[@"date"];
         self.startSelectedDate = date;
         NSDateComponents *dateComponents = [[NSCalendar currentCalendar] components:-1 fromDate:self.startSelectedDate];
-        HSUDatePickerViewController *datePickerVC = (HSUDatePickerViewController *)self.viewControllers[0];
-        datePickerVC.startSelectDateComponents = dateComponents;
+        self.datePickerVC.startSelectDateComponents = dateComponents;
 #ifdef __IPHONE_7_0
-        [datePickerVC.collectionView reloadData];
+        [self.datePickerVC.collectionView reloadData];
 #endif
     } else if (state == UIGestureRecognizerStateEnded) {
         self.selectedDate = self.startSelectedDate;
         self.selectedDateComponents = [[NSCalendar currentCalendar] components:-1 fromDate:self.selectedDate];
-        HSUDatePickerViewController *datePickerVC = (HSUDatePickerViewController *)self.viewControllers[0];
-        datePickerVC.startSelectDateComponents = nil;
-        datePickerVC.selectedDateComponents = self.selectedDateComponents;
-        [datePickerVC.collectionView reloadData];
+        self.datePickerVC.startSelectDateComponents = nil;
+        self.datePickerVC.selectedDateComponents = self.selectedDateComponents;
+        [self.datePickerVC.collectionView reloadData];
         if (self.allowPastDateSelection || ![self dateInPast:self.selectedDate]) {
-          [self.delegate datePicker:self didSelectDate:self.selectedDate];
+            [self.delegate datePicker:self didSelectDate:self.selectedDate];
         }
     } else if (state == UIGestureRecognizerStateCancelled) {
-        HSUDatePickerViewController *datePickerVC = (HSUDatePickerViewController *)self.viewControllers[0];
-        datePickerVC.startSelectDateComponents = nil;
-        [datePickerVC.collectionView reloadData];
+        self.datePickerVC.startSelectDateComponents = nil;
+        [self.datePickerVC.collectionView reloadData];
     }
 }
 
@@ -151,26 +181,26 @@
 }
 
 - (BOOL)dateInPast:(NSDate *)date {
-  NSCalendar *calendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSGregorianCalendar];
-  [calendar setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
+    NSCalendar *calendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSGregorianCalendar];
+    [calendar setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
 
-  NSDateComponents *dateComponents = [calendar components:NSYearCalendarUnit | NSMonthCalendarUnit | NSDayCalendarUnit
-                                                 fromDate:[NSDate date]];
-  [dateComponents setHour:0];
-  [dateComponents setMinute:0];
-  [dateComponents setSecond:0];
+    NSDateComponents *dateComponents = [calendar components:NSYearCalendarUnit | NSMonthCalendarUnit | NSDayCalendarUnit
+                                                   fromDate:[NSDate date]];
+    [dateComponents setHour:0];
+    [dateComponents setMinute:0];
+    [dateComponents setSecond:0];
 
-  NSDate *midnightUTC = [calendar dateFromComponents:dateComponents];
+    NSDate *midnightUTC = [calendar dateFromComponents:dateComponents];
 
-  NSComparisonResult result = [midnightUTC compare:date];
-  switch (result)
-  {
-    case NSOrderedDescending:
-      return YES;
-      break;
-    default:
-      return NO;
-  }
+    NSComparisonResult result = [midnightUTC compare:date];
+    switch (result)
+    {
+        case NSOrderedDescending:
+            return YES;
+            break;
+        default:
+            return NO;
+    }
 }
 
 @end
@@ -298,19 +328,19 @@
 }
 
 - (UIColor *)normalTextColor {
-  if (self.disabledColor) {
-    return self.disabledColor;
-  } else {
-    return [UIColor blackColor];
-  }
+    if (self.disabledColor) {
+        return self.disabledColor;
+    } else {
+        return [UIColor blackColor];
+    }
 }
 
 - (UIColor *)holydaysTextColor {
-  if (self.disabledColor) {
-    return self.disabledColor;
-  } else {
-    return [UIColor grayColor];
-  }
+    if (self.disabledColor) {
+        return self.disabledColor;
+    } else {
+        return [UIColor grayColor];
+    }
 }
 
 @end
@@ -431,19 +461,7 @@
                                            self.collectionView.frame.origin.y+20,
                                            self.collectionView.frame.size.width,
                                            self.collectionView.frame.size.height-20);
-    
-    if (!self.navigationItem.leftBarButtonItem) {
-        self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc]
-                                                 initWithBarButtonSystemItem:UIBarButtonSystemItemCancel
-                                                 target:self.navigationController
-                                                 action:@selector(cancel)];
-    }
-    self.navigationController.navigationBar.backgroundColor = [UIColor whiteColor];
-#ifdef __IPHONE_7_0
-    self.navigationController.navigationBar.barTintColor = [UIColor whiteColor];
-#endif
-    self.navigationController.navigationBar.opaque = YES;
-    
+
     NSUInteger section = (self.today.year - self.startYear) * 12 + self.today.month - 1;
     NSUInteger item = self.today.day;
     NSIndexPath *todayIndexPath = [NSIndexPath indexPathForItem:item inSection:section];
@@ -596,9 +614,9 @@
             header.tintColor = nil;
         }
         [header sizeToFit];
-        
-        self.title = [NSString stringWithFormat:@"%ld", (long)year];
-        
+
+        [self.delegate yearDidChange:year];
+
         return header;
     }
     return nil;
@@ -659,6 +677,37 @@
     default:
       return NO;
   }
+}
+
+@end
+
+@implementation HSUNagivationBar
+
+- (instancetype)initWithFrame:(CGRect)frame {
+    self = [super initWithFrame:frame];
+
+    self.backgroundColor  = [UIColor whiteColor];
+
+    UIButton *cancelButton = [[UIButton alloc] initWithFrame:CGRectMake(10, 0, 60, CGRectGetHeight(self.frame))];
+    [cancelButton addTarget:self action:@selector(cancel) forControlEvents:UIControlEventTouchDown];
+    [cancelButton setTitle:@"Cancel" forState:UIControlStateNormal];
+    [cancelButton setTitleColor:[UIColor blueColor] forState:UIControlStateNormal];
+
+    self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, CGRectGetWidth(self.frame), CGRectGetHeight(self.frame))];
+    self.titleLabel.textAlignment = NSTextAlignmentCenter;
+    [self addSubview:self.titleLabel];
+    [self addSubview:cancelButton];
+
+    return self;
+}
+
+- (void)setTitle:(NSString *)title {
+    self.titleLabel.text = title;
+    [self setNeedsDisplay];
+}
+
+- (void)cancel {
+    [self.delegate cancel];
 }
 
 @end
