@@ -20,7 +20,9 @@ it, simply add the following line to your Podfile:
 ## Author
 
 Jason Hsu, support@tuoxie.me
+
 Haechan Lee, soport55@thefermata.net
+
 Adrian Gomez, adrian.gomez@moove-it.com
 
 ## License
